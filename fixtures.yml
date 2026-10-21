@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Fetch football fixtures
+            - name: Fetch football fixtures
         env:
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          FOOTBALL_SOCCER_API_KEY: ${{ secrets.FOOTBALL_SOCCER_API_KEY }}
         run: node automation/fetch-fixtures.js
