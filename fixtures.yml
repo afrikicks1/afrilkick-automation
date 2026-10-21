@@ -9,6 +9,9 @@ on:
 jobs:
   fetch-fixtures:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -18,8 +21,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Run fixture importer
+      - name: Fetch football fixtures
         env:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
-        run: |
-          echo "Workflow is ready, but the importer must be added to this repository before it can run."
+        run: node automation/fetch-fixtures.js
