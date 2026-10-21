@@ -1,63 +1,54 @@
 
-const API_BASE = "https://v3.football.api-sports.io";
+const API_BASE = "https://api.footballsoccerapi.com/v1";
 
 async function fetchFixtures() {
-  const apiKey = process.env.API_FOOTBALL_KEY;
+  const apiKey = process.env.FOOTBALL_SOCCER_API_KEY;
 
   if (!apiKey) {
-    throw new Error("Missing API_FOOTBALL_KEY environment secret.");
+    throw new Error("Missing FOOTBALL_SOCCER_API_KEY repository secret.");
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-
-  const params = new URLSearchParams({
-    from: today,
-    to: endDate,
-    timezone: "UTC"
-  });
-
   const response = await fetch(
-    `${API_BASE}/fixtures?${params.toString()}`,
+    `${API_BASE}/fixtures/upcoming?days=7&limit=1000`,
     {
       method: "GET",
       headers: {
-        "x-apisports-key": apiKey
+        "X-API-Key": apiKey,
+        "Accept": "application/json"
       }
     }
   );
 
-  if (!response.ok) {
-    throw new Error(`API-Football returned HTTP ${response.status}`);
-  }
-
   const result = await response.json();
 
-  if (result.errors && Object.keys(result.errors).length > 0) {
+  if (!response.ok) {
     throw new Error(
-      `API-Football API error: ${JSON.stringify(result.errors)}`
+      `Football Soccer API returned HTTP ${response.status}: ${
+        JSON.stringify(result)
+      }`
     );
   }
 
-  const fixtures = (result.response || []).map((item) => ({
-    id: String(item.fixture.id),
-    league: item.league.name,
-    country: item.league.country,
-    homeTeam: item.teams.home.name,
-    awayTeam: item.teams.away.name,
-    kickoff: item.fixture.date,
-    status: item.fixture.status.short,
-    homeGoals: item.goals.home,
-    awayGoals: item.goals.away
+  const fixtures = (result.data || []).map((item) => ({
+    id: String(item.match_id),
+    league: item.league_name,
+    country: item.country_name,
+    homeTeam: item.home_team_name,
+    awayTeam: item.away_team_name,
+    kickoff: item.kickoff_utc
+      ? new Date(item.kickoff_utc * 1000).toISOString()
+      : null,
+    status: item.match_status,
+    homeGoals: item.home_goals ?? null,
+    awayGoals: item.away_goals ?? null
   }));
 
   console.log(JSON.stringify(fixtures, null, 2));
   console.log(`Successfully fetched ${fixtures.length} fixtures.`);
 
-  return fixtures;
+  if (result.meta) {
+    console.log("API metadata:", JSON.stringify(result.meta));
+  }
 }
 
 fetchFixtures().catch((error) => {
