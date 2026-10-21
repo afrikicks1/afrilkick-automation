@@ -9,13 +9,21 @@ async function fetchFixtures() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+
   const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
 
+  const params = new URLSearchParams({
+    from: today,
+    to: endDate,
+    timezone: "UTC"
+  });
+
   const response = await fetch(
-    `${API_BASE}/fixtures?from=${today}&to=${endDate}&timezone=UTC`,
+    `${API_BASE}/fixtures?${params.toString()}`,
     {
+      method: "GET",
       headers: {
         "x-apisports-key": apiKey
       }
@@ -29,7 +37,9 @@ async function fetchFixtures() {
   const result = await response.json();
 
   if (result.errors && Object.keys(result.errors).length > 0) {
-    throw new Error(`API-Football API error: ${JSON.stringify(result.errors)}`);
+    throw new Error(
+      `API-Football API error: ${JSON.stringify(result.errors)}`
+    );
   }
 
   const fixtures = (result.response || []).map((item) => ({
@@ -45,6 +55,8 @@ async function fetchFixtures() {
   }));
 
   console.log(JSON.stringify(fixtures, null, 2));
+  console.log(`Successfully fetched ${fixtures.length} fixtures.`);
+
   return fixtures;
 }
 
